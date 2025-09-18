@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NASA Astronomy Explorer</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0d0d1a, #000);
+      color: #fff; text-align: center;
+    }
+    header {
+      padding: 20px;
+      background: rgba(0,0,50,0.8);
+      box-shadow: 0 0 20px cyan;
+    }
+    h1 { color: cyan; }
+    #apod { margin: 20px auto; max-width: 800px; }
+    #apod img, #apod iframe {
+      max-width: 100%; border-radius: 10px; box-shadow: 0 0 20px cyan;
+    }
+    #apod p { text-align: justify; padding: 10px; }
+    #search {
+      margin: 30px; display: flex; justify-content: center; gap: 10px;
+    }
+    input {
+      padding: 10px; border-radius: 8px; border: none;
+      width: 300px;
+    }
+    button {
+      padding: 10px 20px; border: none; border-radius: 8px;
+      background: cyan; color: black; font-weight: bold;
+      cursor: pointer;
+    }
+    #results { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 15px; padding: 20px; }
+    #results img {
+      width: 100%; border-radius: 10px; box-shadow: 0 0 10px #0ff;
+      transition: transform 0.3s;
+    }
+    #results img:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌌 NASA Astronomy Explorer</h1>
+  </header>
+  <section id="apod">
+    <h2>Astronomy Picture of the Day</h2>
+    <div id="apodContent">Loading...</div>
+  </section>
+  <section>
+    <h2>🔭 Search NASA Image Library</h2>
+    <div id="search">
+      <input type="text" id="query" placeholder="Search galaxies, Mars, black holes...">
+      <button onclick="searchNASA()">Search</button>
+    </div>
+    <div id="results"></div>
+  </section>
+  <script>
+    const API_KEY = "tYn6Cj9LHhNyHcdb4YMze7b6mqlAJmf1ocBIflji"; // 🔑 Replace with your NASA API key
+
+    // Load Astronomy Picture of the Day
+    async function loadAPOD() {
+      try {
+        let res = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${API_KEY}`);
+        let data = await res.json();
+
+        if (data.error) {
+          document.getElementById("apodContent").innerHTML = `<p>⚠️ Error: ${data.error.message}</p>`;
+          return;
+        }
+
+        let html = `<h3>${data.title}</h3>`;
+        if (data.media_type === "image") {
+          html += `<img src="${data.url}" alt="APOD">`;
+        } else if (data.media_type === "video") {
+          html += `<iframe src="${data.url}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+        }
+        html += `<p>${data.explanation}</p>`;
+
+        document.getElementById("apodContent").innerHTML = html;
+      } catch (err) {
+        document.getElementById("apodContent").innerHTML = `<p>❌ Failed to load APOD. Check your API key or try again later.</p>`;
+      }
+    }
+
+    // Search NASA Images
+    async function searchNASA() {
+      let q = document.getElementById("query").value;
+      if (!q) return;
+      let res = await fetch(`https://images-api.nasa.gov/search?q=${q}&media_type=image`);
+      let data = await res.json();
+      let items = data.collection.items.slice(0, 12);
+      document.getElementById("results").innerHTML = items.map(item =>
+        `<img src="${item.links[0].href}" alt="${item.data[0].title}" title="${item.data[0].title}">`
+      ).join("");
+    }
+
+    loadAPOD();
+  </script>
+</body>
+</html>
